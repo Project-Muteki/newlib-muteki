@@ -47,7 +47,7 @@ int _getpid_r(struct _reent *r) {
 }
 
 // gettimeofday
-int _gettimeofday_r(struct _reent *r, struct timeval *tp, struct timezone *tzp) {
+int _gettimeofday_r(struct _reent *r, struct timeval *tp, void *tzp) {
     struct tm dt_unix;
     datetime_t dt_besta;
 
@@ -91,7 +91,7 @@ int _link_r(struct _reent *r, const char *old, const char *new) {
 }
 
 // lseek
-int _lseek_r(struct _reent *r, int fd, _off_t ptr, int dir) {
+_off_t _lseek_r(struct _reent *r, int fd, _off_t ptr, int dir) {
     r->_errno = ENOSYS;
     return -1;
 }
@@ -103,7 +103,7 @@ int _open_r(struct _reent *r, const char *name, int flags, int mode) {
 }
 
 // read
-_ssize_t _read_r(struct _reent *r, int fd, char *ptr, _ssize_t len) {
+_ssize_t _read_r(struct _reent *r, int fd, void *ptr, size_t len) {
     r->_errno = ENOSYS;
     return -1;
 }
@@ -116,7 +116,7 @@ void *_sbrk_r(struct _reent *r, int incr) {
 }
 
 // stat
-int _stat_r(struct _reent *r, char *name, struct stat *st) {
+int _stat_r(struct _reent *r, const char *name, struct stat *st) {
     r->_errno = ENOSYS;
     return -1;
 }
@@ -128,7 +128,7 @@ clock_t _times_r(struct _reent *r, struct tms *buf) {
 }
 
 // unlink
-int _unlink_r(struct _reent *r, char *name) {
+int _unlink_r(struct _reent *r, const char *name) {
     r->_errno = ENOSYS;
     return -1;
 }

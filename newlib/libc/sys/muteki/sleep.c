@@ -1,6 +1,8 @@
+#include <sys/types.h>
+
 #include <muteki/threading.h>
 
-static inline _millis(unsigned long ms) {
+static inline void _millis(unsigned long ms) {
     while (ms > 0x7fff) {
         OSSleep(0x7fff);
         ms -= 0x7fff;
@@ -14,7 +16,7 @@ unsigned int sleep(unsigned int seconds) {
 }
 
 unsigned int usleep(__useconds_t useconds) {
-    _millis(seconds / 1000);
+    _millis(useconds / 1000);
     return 0;
 }
 

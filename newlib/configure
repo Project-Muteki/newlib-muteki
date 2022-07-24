@@ -803,6 +803,8 @@ HAVE_LIBC_SYS_OR1K_DIR_FALSE
 HAVE_LIBC_SYS_OR1K_DIR_TRUE
 HAVE_LIBC_SYS_NETWARE_DIR_FALSE
 HAVE_LIBC_SYS_NETWARE_DIR_TRUE
+HAVE_LIBC_SYS_MUTEKI_DIR_FALSE
+HAVE_LIBC_SYS_MUTEKI_DIR_TRUE
 HAVE_LIBC_SYS_MMIXWARE_DIR_FALSE
 HAVE_LIBC_SYS_MMIXWARE_DIR_TRUE
 HAVE_LIBC_SYS_M88KBUG_DIR_FALSE
@@ -5421,6 +5423,13 @@ else
   HAVE_LIBC_SYS_MMIXWARE_DIR_TRUE='#'
   HAVE_LIBC_SYS_MMIXWARE_DIR_FALSE=
 fi
+ if test "${sys_dir}" = muteki; then
+  HAVE_LIBC_SYS_MUTEKI_DIR_TRUE=
+  HAVE_LIBC_SYS_MUTEKI_DIR_FALSE='#'
+else
+  HAVE_LIBC_SYS_MUTEKI_DIR_TRUE='#'
+  HAVE_LIBC_SYS_MUTEKI_DIR_FALSE=
+fi
  if test "${sys_dir}" = netware; then
   HAVE_LIBC_SYS_NETWARE_DIR_TRUE=
   HAVE_LIBC_SYS_NETWARE_DIR_FALSE='#'
@@ -7645,6 +7654,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAVE_LIBC_SYS_MMIXWARE_DIR_TRUE}" && test -z "${HAVE_LIBC_SYS_MMIXWARE_DIR_FALSE}"; then
   as_fn_error $? "conditional \"HAVE_LIBC_SYS_MMIXWARE_DIR\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${HAVE_LIBC_SYS_MUTEKI_DIR_TRUE}" && test -z "${HAVE_LIBC_SYS_MUTEKI_DIR_FALSE}"; then
+  as_fn_error $? "conditional \"HAVE_LIBC_SYS_MUTEKI_DIR\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${HAVE_LIBC_SYS_NETWARE_DIR_TRUE}" && test -z "${HAVE_LIBC_SYS_NETWARE_DIR_FALSE}"; then

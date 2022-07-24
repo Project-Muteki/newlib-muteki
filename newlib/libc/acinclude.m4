@@ -16,7 +16,7 @@ m4_foreach_w([SYS_DIR], [
   d10v
   epiphany
   h8300hms h8500hms
-  m88kbug mmixware
+  m88kbug mmixware muteki
   netware
   or1k
   rdos rtems
