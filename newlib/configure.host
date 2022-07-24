@@ -451,6 +451,10 @@ case "${host}" in
 	sys_dir=amdgcn
 	have_crt0="no"
 	;;
+  arm*-besta*eabi*)
+    sys_dir=muteki
+    default_newlib_io_c99_formats="yes"
+	;;
   arm*-*-*)
 	sys_dir=arm
 	if [ "x${newlib_may_supply_syscalls}" = "xno" ] ; then
@@ -636,6 +640,12 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
   arc*-*-*)
 	syscall_dir=syscalls
 	default_newlib_io_long_long="yes"
+	;;
+  arm*-besta*eabi*)
+    syscall_dir=syscalls
+    newlib_cflags="${newlib_cflags} -DMALLOC_PROVIDED -DHAVE_OPENDIR -DREENTRANT_SYSCALLS_PROVIDED"
+    # Thread isn't working yet.
+    newlib_cflags="${newlib_cflags} -D__SINGLE_THREAD__"
 	;;
   arm*-*-pe)
 	syscall_dir=syscalls
