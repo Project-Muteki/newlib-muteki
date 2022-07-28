@@ -1,7 +1,7 @@
 #include <string.h>
 #include "applet_lifecycle.h"
 
-static int __stack_fixed = 0;
+int __stack_fixed = 0;
 
 /* Works around a Besta RTOS program loader bug that resulted in unaligned stack
  * pointer being handed over to the application */
