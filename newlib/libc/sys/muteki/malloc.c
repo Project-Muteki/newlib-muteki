@@ -11,8 +11,11 @@
  *
  */
 
+#include <_ansi.h>
 #include <errno.h>
 #include <reent.h>
+#include <stdlib.h>
+#include <malloc.h>
 
 #include <muteki/memory.h>
 
@@ -79,3 +82,20 @@ void _free_r(struct _reent *r, void *ptr) {
     _lfree(ptr);
 }
 
+/* Below are copied from newlib's reentrent to C standard functions. */
+
+void *malloc(size_t nbytes) {
+    return _malloc_r(_REENT, nbytes);
+}
+
+void free(void *aptr) {
+    _free_r(_REENT, aptr);
+}
+
+void *calloc(size_t n, size_t size) {
+    return _calloc_r(_REENT, n, size);
+}
+
+void *realloc(void *ap, size_t nbytes) {
+    return _realloc_r(_REENT, ap, nbytes);
+}

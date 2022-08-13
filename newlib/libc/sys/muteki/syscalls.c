@@ -3,12 +3,38 @@
  */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <reent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "bestadescriptor.h"
+#include "nowide.h"
+
 #include <muteki/datetime.h>
+#include <muteki/errno.h>
+#include <muteki/file.h>
+
+const UTF16 *__READ_BINARY = u"rb";
+const UTF16 *__RW_BINARY = u"wb+";
+const UTF16 *__APPEND_BINARY = u"wb+";
+
+static const UTF16 *open_flag_to_besta(int flags) {
+    int accmode = flags & O_ACCMODE;
+    switch (accmode) {
+        case O_WRONLY:
+        case O_RDWR:
+            if (flags & O_APPEND) {
+                return __APPEND_BINARY;
+            }
+            return __RW_BINARY;
+        case O_RDONLY:
+            return __READ_BINARY;
+        default:
+            return NULL;
+    }
+}
 
 // _exit() is defined in program_lifecycle.c
 
@@ -74,8 +100,13 @@ int _gettimeofday_r(struct _reent *r, struct timeval *tp, void *tzp) {
 
 // isatty
 int _isatty_r(struct _reent *r, int fd) {
-    r->_errno = ENOSYS;
-    return -1;
+    // std* is definitely TTY.
+    if (fd < 3) {
+        return 1;
+    }
+    // TODO query the FD and set errno to EBADF if descriptor is not used.
+    r->_errno = ENOTTY;
+    return 0;
 }
 
 // kill

@@ -1,4 +1,5 @@
 #include "applet_lifecycle.h"
+#include "bestadescriptor.h"
 
 int __exit_value;
 jmp_buf __exit_jmp_buf;
@@ -11,6 +12,7 @@ int _start_after_fix(int type, const app_exec_context_t *ctx, int arg3) {
     // TODO is this actually necessary?
     //memset(__bss_start__, 0, (size_t) (__bss_end__ - __bss_start__));
     __libc_init_array();
+    _init_muteki_io();
 
     // Save the execution context for exit() and start the app.
     if (!setjmp(__exit_jmp_buf)) {
@@ -18,6 +20,7 @@ int _start_after_fix(int type, const app_exec_context_t *ctx, int arg3) {
     }
 
     // Run cleanup hooks and return.
+    _free_muteki_io();
     __libc_fini_array();
 
     return __exit_value;
