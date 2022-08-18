@@ -4,6 +4,8 @@
 int __exit_value;
 jmp_buf __exit_jmp_buf;
 
+extern void __libc_init_array(void);
+extern void __libc_fini_array(void);
 extern int main(int argc, char *argv[]);
 
 int _start_after_fix(int type, const app_exec_context_t *ctx, int arg3) {

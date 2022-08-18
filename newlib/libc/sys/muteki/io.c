@@ -176,9 +176,9 @@ int __muteki_fd_drop(DescriptorTranslation *map) {
         }
 
         if (ret != 0) {
-            muteki_errno_t berrno = _GetLastError();
+            kerrno_t kerrno = _GetLastError();
             OSLeaveCriticalSection(&_newlib_fd_mutex);
-            return -__muteki_besta_errno_to_errno(berrno);
+            return -__muteki_kerrno_to_errno(kerrno);
         }
 
         map->ref_count--;
