@@ -5,7 +5,7 @@ int __muteki_kerrno_to_errno(kerrno_t kerrno) {
     short err = KERRNO_ERR(kerrno);
     short ns = KERRNO_NS(kerrno);
     switch (ns) {
-    case ERRNO_NS_KERNEL：
+    case ERRNO_NS_KERNEL:
         switch (err) {
         case FS_INVALID_DRIVE_LETTER:
             return ENODEV;
@@ -39,6 +39,8 @@ int __muteki_kerrno_to_errno(kerrno_t kerrno) {
             return ENFILE;
         case MEDIUM_UNLOADED:
             return ENOMEDIUM;
+        case MEDIUM_INCOMPATIBLE:
+            return EMEDIUMTYPE;
         // Explicitly ignore.
         case FS_FILE_ATTR_ERROR: // May be handled in specific C APIs.
         case FS_FILE_OOB_ACCESS: // Just truncate the data/length. TODO verify the truncate behavior
@@ -48,4 +50,5 @@ int __muteki_kerrno_to_errno(kerrno_t kerrno) {
         break;
     default:
         return 0;
+    }
 }

@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef __MUTEKI_LIBC_BESTADESCRIPTOR_H__
 #define __MUTEKI_LIBC_BESTADESCRIPTOR_H__
 
+#include <muteki/common.h>
 
 #define MAX_OPEN_FILES 256
 
@@ -42,7 +43,7 @@ typedef struct {
     void *handle;
     DescriptorTypes type;
     int ref_count;
-    char* filename;
+    UTF16 *filename;
 } DescriptorTranslation;
 
 extern DescriptorTranslation *__muteki_fdmap[];

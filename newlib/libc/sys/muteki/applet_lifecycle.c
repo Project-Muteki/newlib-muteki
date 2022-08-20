@@ -1,5 +1,6 @@
 #include "applet_lifecycle.h"
 #include "bestadescriptor.h"
+#include "mutekishims_utils.h"
 
 int __exit_value;
 jmp_buf __exit_jmp_buf;
