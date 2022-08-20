@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <reent.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -61,6 +62,22 @@ static UTF16 *dir_to_fnmatch(UTF16 *path) {
         fnmatch[wlen] = _BUL('\\');
         fnmatch[wlen+1] = _BUL('*');
         return fnmatch;
+    }
+}
+
+static int whence_to_besta(int whence, int *err) {
+    switch (whence) {
+    case SEEK_SET:
+        return _SYS_SEEK_SET;
+    case SEEK_CUR:
+        return _SYS_SEEK_CUR;
+    case SEEK_END:
+        return _SYS_SEEK_END;
+    default:
+        if (err != NULL) {
+            *err = EINVAL;
+        }
+        return 0;
     }
 }
 
@@ -153,9 +170,48 @@ int _link_r(struct _reent *r, const char *old, const char *new) {
 }
 
 // lseek
-_off_t _lseek_r(struct _reent *r, int fd, _off_t ptr, int dir) {
-    _REENT_ERRNO(r) = ENOSYS;
-    return -1;
+_off_t _lseek_r(struct _reent *r, int fd, _off_t offset, int whence) {
+    DescriptorTranslation *dt = __muteki_fd_grab(fd);
+    if (dt == NULL) {
+        _REENT_ERRNO(r) = EBADF;
+        return -1;
+    }
+
+    switch (dt->type) {
+    case MUTEKI_DESCRIPTOR_DEVNULL: {
+        return 0;
+    }
+    case MUTEKI_DESCRIPTOR_FILE: {
+        // TODO check off_t sizes
+        int whence_err = 0;
+        int sys_whence = whence_to_besta(whence, &whence_err);
+        if (whence_err != 0) {
+            _REENT_ERRNO(r) = whence_err;
+            __muteki_fd_drop(dt);
+            return -1;
+        }
+        int result = __fseek(dt->handle, offset, sys_whence);
+        if (result < 0) {
+            _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
+            __muteki_fd_drop(dt);
+            return -1;
+        }
+        _off_t current_pos = _ftell(dt->handle);
+        __muteki_fd_drop(dt);
+        return current_pos;
+    }
+    case MUTEKI_DESCRIPTOR_DIRECTORY: {
+        __muteki_fd_drop(dt);
+        _REENT_ERRNO(r) = EISDIR;
+        return -1;
+    }
+    case MUTEKI_DESCRIPTOR_CHARDEV: // TODO
+    default: {
+        __muteki_fd_drop(dt);
+        _REENT_ERRNO(r) = ENOSYS;
+        return -1;
+    }
+    }
 }
 
 // open
@@ -266,15 +322,16 @@ _ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len) {
     }
     case MUTEKI_DESCRIPTOR_FILE: {
         size_t actual = _fread(buf, 1, len, dt->handle);
-        __muteki_fd_drop(dt);
         if (actual == 0) {
             int errno_converted = __muteki_kerrno_to_errno(_GetLastError());
+            __muteki_fd_drop(dt);
             if (errno_converted != 0) {
                 _REENT_ERRNO(r) = errno_converted;
                 return -1;
             }
             return 0;
         }
+        __muteki_fd_drop(dt);
         return (_ssize_t) (actual & 0x7fffffff);
     }
     case MUTEKI_DESCRIPTOR_DIRECTORY: {
@@ -336,15 +393,17 @@ _ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len) {
     }
     case MUTEKI_DESCRIPTOR_FILE: {
         size_t actual = _fwrite(buf, 1, len, dt->handle);
-        __muteki_fd_drop(dt);
         if (actual == 0) {
             int errno_converted = __muteki_kerrno_to_errno(_GetLastError());
+            __muteki_fd_drop(dt);
             if (errno_converted != 0) {
                 _REENT_ERRNO(r) = errno_converted;
                 return -1;
             }
             return 0;
         }
+        __fflush(dt->handle);
+        __muteki_fd_drop(dt);
         return (_ssize_t) (actual & 0x7fffffff);
     }
     case MUTEKI_DESCRIPTOR_DIRECTORY: {
