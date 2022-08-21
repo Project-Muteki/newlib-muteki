@@ -3,8 +3,6 @@
 #include <malloc.h>
 #include <string.h>
 
-extern int mutekix_console_printf(const char *fmt, ...);
-
 // These are ported from newlib
 size_t __nowide_bestawcslen(const UTF16 *s) {
     const UTF16 *p;

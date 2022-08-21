@@ -27,8 +27,6 @@ const UTF16 __RW_BINARY[] = _BUL("rb+");
 const UTF16 __RW_BINARY_TRUNC[] = _BUL("wb+");
 const UTF16 __APPEND_BINARY[] = _BUL("ab+");
 
-extern int mutekix_console_printf(const char *fmt, ...);
-
 static const UTF16 *open_flag_to_besta(int flags) {
     int accmode = flags & O_ACCMODE;
     switch (accmode) {
@@ -229,8 +227,6 @@ int _open_r(struct _reent *r, const char *name, int flags, int mode) {
         return -1;
     }
 
-    mutekix_console_printf("flags: 0x%x\n", flags);
-
     short attr = _wfgetattr(wname);
 
     if (attr < 0) {
@@ -369,8 +365,31 @@ clock_t _times_r(struct _reent *r, struct tms *buf) {
 
 // unlink
 int _unlink_r(struct _reent *r, const char *name) {
-    _REENT_ERRNO(r) = ENOSYS;
-    return -1;
+    if (strlen(name) == 0) {
+        _REENT_ERRNO(r) = ENOENT;
+        return -1;
+    }
+
+    UTF16 *wname = __nowide_path_a2w_r(r, name);
+    if (wname == NULL) {
+        return -1;
+    }
+
+    short attr = _wfgetattr(wname);
+    if ((attr & ATTR_DIR) != 0) {
+        free(wname);
+        _REENT_ERRNO(r) = EISDIR;
+        return -1;
+    }
+
+    bool result = _wremove(wname);
+    free(wname);
+
+    if (!result) {
+        _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
+        return -1;
+    }
+    return 0;
 }
 
 // wait
