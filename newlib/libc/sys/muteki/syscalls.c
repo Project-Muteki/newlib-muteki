@@ -79,6 +79,41 @@ static int whence_to_besta(int whence, int *err) {
     }
 }
 
+static time_t find_timestamp_to_unix(unsigned int find_ts) {
+    struct tm dt;
+
+    dt.tm_year = FIND_TS_YEAR(find_ts);
+    dt.tm_mon = FIND_TS_MONTH(find_ts) - 1;
+    dt.tm_mday = FIND_TS_DAY(find_ts);
+    dt.tm_hour = FIND_TS_HOUR(find_ts);
+    dt.tm_min = FIND_TS_MINUTE(find_ts);
+    dt.tm_sec = FIND_TS_SECOND(find_ts);
+    dt.tm_isdst = -1;
+
+    return mktime(&dt);
+}
+
+static int stat_from_find_ctx_r(struct stat *out, find_context_t *in) {
+    memset(out, 0, sizeof(struct stat));
+
+    out->st_size = (off_t) (in->size & 0x7fffffffl);
+    out->st_atime = find_timestamp_to_unix(in->atime);
+    // Linux maps ctime to FAT btime, but Besta's btime is not usable due to a bug (?) on the OS side. So we map ctime to mtime instead.
+    out->st_ctime = find_timestamp_to_unix(in->mtime);
+    out->st_mtime = find_timestamp_to_unix(in->mtime);
+
+    if (in->attrib & ATTR_DIR) {
+        out->st_mode |= _IFDIR;
+    } else {
+        out->st_mode |= _IFREG;
+    }
+
+    if ((sizeof(off_t) == 4) && (in->size & 0x80000000ul)) {
+        return -EOVERFLOW;
+    }
+    return 0;
+}
+
 // _exit() is defined in program_lifecycle.c
 
 // close
@@ -382,7 +417,7 @@ int _unlink_r(struct _reent *r, const char *name) {
         return -1;
     }
 
-    bool result = _wremove(wname);
+    bool result = __wremove(wname);
     free(wname);
 
     if (!result) {
