@@ -201,10 +201,16 @@ int _gettimeofday_r(struct _reent *r, struct timeval *tp, void *tzp) {
 // isatty
 int _isatty_r(struct _reent *r, int fd) {
     // std* is definitely TTY.
+    // TODO: un-hardcode this after custom std* is possible
     if (fd < 3) {
         return 1;
     }
-    // TODO query the FD and set errno to EBADF if descriptor is not used.
+
+    if (!is_fd_valid(fd)) {
+        _REENT_ERRNO(r) = EBADF;
+        return 0;
+    }
+
     _REENT_ERRNO(r) = ENOTTY;
     return 0;
 }
