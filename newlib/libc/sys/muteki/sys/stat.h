@@ -38,12 +38,14 @@ struct	stat
   time_t	st_atime;
   time_t	st_mtime;
   time_t	st_ctime;
+#if defined(__bestartos__)
+  blksize_t     st_blksize;
+  blkcnt_t	st_blocks;
+#endif
 #else
   struct timespec st_atim;
   struct timespec st_mtim;
   struct timespec st_ctim;
-  blksize_t     st_blksize;
-  blkcnt_t	st_blocks;
 #if !defined(__rtems__)
   long		st_spare4[2];
 #endif
