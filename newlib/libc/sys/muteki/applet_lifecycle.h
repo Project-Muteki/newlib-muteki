@@ -18,9 +18,9 @@ extern jmp_buf __exit_jmp_buf;
 
 extern int _start_after_fix(int type, const app_exec_context_t *ctx, int arg3);
 
-extern int app_startup(int type, const app_exec_context_t *ctx, int arg3);
-extern int app_main(int subroutine, int argc, char *argv[]);
-extern void app_reset();
+extern int applet_startup(int type, const app_exec_context_t *ctx, int arg3);
+extern int applet_main(int subroutine, int argc, char *argv[]);
+extern void applet_reset();
 
 #endif // __MUTEKI_LIBC_APPLET_LIFECYCLE_H__
 
