@@ -2,6 +2,7 @@
 #define __MUTEKI_LIBC_APPLET_LIFECYCLE_H__
 
 #include <setjmp.h>
+#include <stdint.h>
 #include <muteki/loader.h> // for GetCurrentPathA
 
 #define APP_SUBROUTINE_MUTEKI_MAIN 0x4d544b50
@@ -16,9 +17,9 @@ typedef struct {
 extern int __exit_value;
 extern jmp_buf __exit_jmp_buf;
 
-extern int _start_after_fix(int type, const app_exec_context_t *ctx, int arg3);
+extern int _start_after_fix(uintptr_t v1, uintptr_t v2, uintptr_t v3);
 
-extern int applet_startup(int type, const app_exec_context_t *ctx, int arg3);
+extern int applet_startup(uintptr_t v1, uintptr_t v2, uintptr_t v3);
 extern int applet_main(int subroutine, int argc, char *argv[]);
 extern void applet_reset();
 

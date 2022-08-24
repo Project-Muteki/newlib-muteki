@@ -9,14 +9,14 @@ jmp_buf __exit_jmp_buf;
 extern void __libc_init_array(void);
 extern void __libc_fini_array(void);
 
-int _start_after_fix(int type, const app_exec_context_t *ctx, int arg3) {
+int _start_after_fix(uintptr_t v1, uintptr_t v2, uintptr_t v3) {
     // Run initialization hooks
     __libc_init_array();
     _init_muteki_io();
 
     // Save the execution context for exit() and start the app.
     if (!setjmp(__exit_jmp_buf)) {
-        __exit_value = applet_startup(type, ctx, arg3);
+        __exit_value = applet_startup(v1, v2, v3);
     }
 
     // Run cleanup hooks and return.

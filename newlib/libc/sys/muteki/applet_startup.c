@@ -1,11 +1,10 @@
 #include "applet_lifecycle.h"
-#include "bestadescriptor.h"
-#include "mutekishims_utils.h"
-
-extern int main(int argc, char *argv[]);
 
 __attribute__((weak))
-int applet_startup(int type, const app_exec_context_t *ctx, int arg3) {
+int applet_startup(uintptr_t v1, uintptr_t v2, uintptr_t v3) {
+    int type = (int) v1;
+    const app_exec_context_t *ctx = (const app_exec_context_t *) v2;
+
     char *argv[2];
     int argc = 0;
     int subroutine = APP_SUBROUTINE_MAIN;
@@ -29,41 +28,8 @@ int applet_startup(int type, const app_exec_context_t *ctx, int arg3) {
         argv[0] = ctx->dospath;
         argv[1] = *ctx->args;
         subroutine = *ctx->invoke_subroutine;
-        // I have no idea what arg3 is used for so just leave it alone.
+        // I have no idea what v3 is used for in a Besta applet so just leave it alone.
     }
 
     return applet_main(subroutine, argc, argv);
 }
-
-__attribute__((weak))
-int applet_main(int subroutine, int argc, char *argv[]) {
-    int rv = 0;
-    switch (subroutine) {
-        case APP_SUBROUTINE_MAIN: {
-            rv = main(argc, argv);
-            break;
-        }
-        case APP_SUBROUTINE_RESET_STATES: {
-            // TODO where should we put this?
-            applet_reset();
-            rv = 3;
-            break;
-        }
-        default: {
-            rv = 4;
-            break;
-        }
-    }
-    return rv;
-}
-
-__attribute__((weak))
-void applet_reset() { /* ... */ }
-
-__attribute__((noreturn))
-void _exit(int ret) {
-    __exit_value = ret;
-    longjmp(__exit_jmp_buf, 1);
-    __builtin_unreachable();
-}
-
