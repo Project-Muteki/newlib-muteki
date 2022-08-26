@@ -218,7 +218,7 @@ size_t __nowide_mbstobestawcs_r (struct _reent *r, UTF16 *__restrict pwcs, const
 
 // Shortcuts based on the above
 /**
- * @brief Convert a UTF-8 "ANSI" path string to UTF-16 (Besta Unicode) with allocation.
+ * @brief Normalize a path and convert it to Besta UTF-16 with allocation.
  *
  * Sets errno to ENOSYS if the iconv codec is not provided, ENOMEM if any allocation fails or ENOENT if conversion fails.
  *
@@ -226,7 +226,8 @@ size_t __nowide_mbstobestawcs_r (struct _reent *r, UTF16 *__restrict pwcs, const
  * @param a Source string in UTF-8.
  * @return The converted string in UTF-16 or NULL if conversion fails. The user needs to free it after use.
  */
-UTF16 *__nowide_path_a2w_r(struct _reent *r, const char *a) {
+UTF16 *__nowide_prep_path_for_syscall_r(struct _reent *r, const char *a) {
+    // TODO forward slashes to backward slashes
     // TODO convert a into abspath
     size_t alen = strlen(a);
     __nowide_mbstate_t ctx = {0};
@@ -243,6 +244,7 @@ UTF16 *__nowide_path_a2w_r(struct _reent *r, const char *a) {
 
     if (actual < 0) {
         free(result);
+        _REENT_ERRNO(r) = EILSEQ;
         return NULL;
     }
 

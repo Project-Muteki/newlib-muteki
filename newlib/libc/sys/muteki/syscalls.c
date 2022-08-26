@@ -282,7 +282,7 @@ int _open_r(struct _reent *r, const char *name, int flags, int mode) {
         return -1;
     }
 
-    UTF16 *wname = __nowide_path_a2w_r(r, name);
+    UTF16 *wname = __nowide_prep_path_for_syscall_r(r, name);
     if (wname == NULL) {
         return -1;
     }
@@ -415,7 +415,7 @@ void *_sbrk_r(struct _reent *r, int incr) {
 int _stat_r(struct _reent *r, const char *name, struct stat *st) {
     find_context_t find_ctx;
 
-    UTF16 *wname = __nowide_path_a2w_r(r, name);
+    UTF16 *wname = __nowide_prep_path_for_syscall_r(r, name);
     if (wname == NULL) {
         return -1;
     }
@@ -450,7 +450,7 @@ int _unlink_r(struct _reent *r, const char *name) {
         return -1;
     }
 
-    UTF16 *wname = __nowide_path_a2w_r(r, name);
+    UTF16 *wname = __nowide_prep_path_for_syscall_r(r, name);
     if (wname == NULL) {
         return -1;
     }

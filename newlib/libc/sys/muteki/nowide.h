@@ -15,6 +15,6 @@ typedef struct {
 
 extern size_t __nowide_mbstobestawcs_r(struct _reent *r, UTF16 *__restrict pwcs, const char *__restrict s, size_t n, __nowide_mbstate_t *state);
 extern size_t __nowide_bestawcslen(const UTF16 *s);
-extern UTF16 *__nowide_path_a2w_r(struct _reent *r, const char *a);
+extern UTF16 *__nowide_prep_path_for_syscall_r(struct _reent *r, const char *a);
 
 #endif // __MUTEKI_LIBC_NOWIDE_H__

@@ -7,20 +7,14 @@
 
 #define APP_SUBROUTINE_MUTEKI_MAIN 0x4d544b50
 
-typedef struct {
-    char *dospath;
-    int *invoke_subroutine;
-    char **args;
-    int *app_arg3;
-} app_exec_context_t;
 
 extern int __exit_value;
 extern jmp_buf __exit_jmp_buf;
 
-extern int _start_after_fix(uintptr_t v1, uintptr_t v2, uintptr_t v3);
+extern int _start_after_fix(int exec_proto_ver, applet_args_v4_t *applet_args, uintptr_t _sbz);
 
-extern int applet_startup(uintptr_t v1, uintptr_t v2, uintptr_t v3);
-extern int applet_main(int subroutine, int argc, char *argv[]);
+extern int applet_startup(int exec_proto_ver, applet_args_v4_t *applet_args, uintptr_t _sbz);
+extern int applet_main(char *dospath, int subroutine, void *applet_arg1, void *applet_arg2);
 extern void applet_reset();
 
 #endif // __MUTEKI_LIBC_APPLET_LIFECYCLE_H__

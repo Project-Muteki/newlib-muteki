@@ -9,14 +9,14 @@ jmp_buf __exit_jmp_buf;
 extern void __libc_init_array(void);
 extern void __libc_fini_array(void);
 
-int _start_after_fix(uintptr_t v1, uintptr_t v2, uintptr_t v3) {
+int _start_after_fix(int exec_proto_ver, applet_args_v4_t *app_ctx, uintptr_t _sbz) {
     // Run initialization hooks
     __libc_init_array();
     _init_muteki_io();
 
     // Save the execution context for exit() and start the app.
     if (!setjmp(__exit_jmp_buf)) {
-        __exit_value = applet_startup(v1, v2, v3);
+        __exit_value = applet_startup(exec_proto_ver, app_ctx, _sbz);
     }
 
     // Run cleanup hooks and return.
@@ -29,7 +29,7 @@ int _start_after_fix(uintptr_t v1, uintptr_t v2, uintptr_t v3) {
 /* Works around a Besta RTOS program loader bug that resulted in unaligned stack
  * pointer being handed over to the application */
 __attribute__((naked))
-int _start(int type, const app_exec_context_t *ctx, int arg3) {
+int _start(int exec_proto_ver, applet_args_v4_t *applet_args, uintptr_t _sbz) {
     asm (
         // Align to 8-bytes ourselves
         "push {r4, r5, r6, lr}\n\t"
