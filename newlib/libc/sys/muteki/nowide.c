@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdlib.h>
 
 // These are ported from newlib
 size_t __nowide_bestawcslen(const UTF16 *s) {
@@ -192,6 +193,83 @@ static int __utf8_mbtobestawc(struct _reent *r, UTF16 *pwc, const char *s, size_
     return -1;
 }
 
+int __utf8_bestawctomb (struct _reent *r, char *s, UTF16 _wchar, __nowide_mbstate_t *state) {
+    uint32_t wchar = _wchar;
+    int ret = 0;
+
+    if (s == NULL)
+        return 0; /* UTF-8 encoding is not state-dependent */
+
+    if (sizeof (UTF16) == 2 && state->__count == -4
+            && (wchar < 0xdc00 || wchar > 0xdfff)) {
+        /* There's a leftover lone high surrogate.  Write out the CESU-8 value
+        of the surrogate and proceed to convert the given character.  Note
+         to return extra 3 bytes. */
+        UTF16 tmp;
+        tmp = (state->__value.__wchb[0] << 16 | state->__value.__wchb[1] << 8)
+              - (0x10000 >> 10 | 0xd80d);
+        *s++ = 0xe0 | ((tmp & 0xf000) >> 12);
+        *s++ = 0x80 | ((tmp &  0xfc0) >> 6);
+        *s++ = 0x80 |  (tmp &   0x3f);
+        state->__count = 0;
+        ret = 3;
+    }
+    if (wchar <= 0x7f) {
+        *s = wchar;
+        return ret + 1;
+    }
+    if (wchar >= 0x80 && wchar <= 0x7ff) {
+        *s++ = 0xc0 | ((wchar & 0x7c0) >> 6);
+        *s   = 0x80 |  (wchar &  0x3f);
+        return ret + 2;
+    }
+    if (wchar >= 0x800 && wchar <= 0xffff) {
+        /* No UTF-16 surrogate handling in UCS-4 */
+        if (sizeof (UTF16) == 2 && wchar >= 0xd800 && wchar <= 0xdfff) {
+            uint32_t tmp;
+            if (wchar <= 0xdbff) {
+                /* First half of a surrogate pair.  Store the state and
+                   return ret + 0. */
+                tmp = ((wchar & 0x3ff) << 10) + 0x10000;
+                state->__value.__wchb[0] = (tmp >> 16) & 0xff;
+                state->__value.__wchb[1] = (tmp >> 8) & 0xff;
+                state->__count = -4;
+                *s = (0xf0 | ((tmp & 0x1c0000) >> 18));
+                return ret;
+            }
+            if (state->__count == -4) {
+                /* Second half of a surrogate pair.  Reconstruct the full
+                Unicode value and return the trailing three bytes of the
+                 UTF-8 character. */
+                tmp = (state->__value.__wchb[0] << 16)
+                      | (state->__value.__wchb[1] << 8)
+                      | (wchar & 0x3ff);
+                state->__count = 0;
+                *s++ = 0xf0 | ((tmp & 0x1c0000) >> 18);
+                *s++ = 0x80 | ((tmp &  0x3f000) >> 12);
+                *s++ = 0x80 | ((tmp &    0xfc0) >> 6);
+                *s   = 0x80 |  (tmp &     0x3f);
+                return 4;
+            }
+            /* Otherwise translate into CESU-8 value. */
+        }
+        *s++ = 0xe0 | ((wchar & 0xf000) >> 12);
+        *s++ = 0x80 | ((wchar &  0xfc0) >> 6);
+        *s   = 0x80 |  (wchar &   0x3f);
+        return ret + 3;
+    }
+    if (wchar >= 0x10000 && wchar <= 0x10ffff) {
+        *s++ = 0xf0 | ((wchar & 0x1c0000) >> 18);
+        *s++ = 0x80 | ((wchar &  0x3f000) >> 12);
+        *s++ = 0x80 | ((wchar &    0xfc0) >> 6);
+        *s   = 0x80 |  (wchar &     0x3f);
+        return 4;
+    }
+
+    _REENT_ERRNO(r) = EILSEQ;
+    return -1;
+}
+
 size_t __nowide_mbstobestawcs_r (struct _reent *r, UTF16 *__restrict pwcs, const char *__restrict s, size_t n, __nowide_mbstate_t *state) {
     size_t ret = 0;
     char *t = (char *)s;
@@ -214,6 +292,39 @@ size_t __nowide_mbstobestawcs_r (struct _reent *r, UTF16 *__restrict pwcs, const
         }
     }
     return ret;
+}
+
+size_t __nowide_bestawcstombs_r (struct _reent *r, char *__restrict s, const UTF16 *__restrict pwcs, size_t n, __nowide_mbstate_t *state) {
+    char *ptr = s;
+    size_t max = n;
+    char buff[8];
+    int i, bytes, num_to_copy;
+
+    if (s == NULL) {
+        size_t num_bytes = 0;
+        while (*pwcs != 0) {
+            bytes = __utf8_bestawctomb (r, buff, *pwcs++, state);
+            if (bytes == -1)
+                return -1;
+            num_bytes += bytes;
+        }
+        return num_bytes;
+    } else {
+        while (n > 0) {
+            bytes = __utf8_bestawctomb (r, buff, *pwcs, state);
+            if (bytes == -1)
+                return -1;
+            num_to_copy = (n > bytes ? bytes : (int)n);
+            for (i = 0; i < num_to_copy; ++i)
+                *ptr++ = buff[i];
+
+            if (*pwcs == 0x00)
+                return ptr - s - (n >= bytes);
+            ++pwcs;
+            n -= num_to_copy;
+        }
+        return max;
+    }
 }
 
 // Shortcuts based on the above

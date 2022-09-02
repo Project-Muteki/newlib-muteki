@@ -95,8 +95,8 @@ void *_malloc_r(struct _reent *r, size_t size) {
  * Sets @p errno to @p ENOMEM if _malloc_r() returns a NULL.
  *
  * @param r Newlib reentrant context.
- * @param nmemb Data unit size.
- * @param size Number of data units to allocate.
+ * @param nmemb Number of data units to allocate.
+ * @param size Data unit size.
  * @return Pointer to allocated memory, or NULL if allocation fails.
  */
 void *_calloc_r(struct _reent *r, size_t nmemb, size_t size) {

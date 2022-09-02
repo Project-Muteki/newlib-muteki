@@ -24,6 +24,9 @@
 #include <muteki/file.h>
 #include <muteki/fs.h>
 
+//debug
+#include <mutekix/console.h>
+
 const UTF16 __READ_BINARY[] = _BUL("rb");
 const UTF16 __RW_BINARY[] = _BUL("rb+");
 const UTF16 __RW_BINARY_TRUNC[] = _BUL("wb+");
@@ -45,23 +48,6 @@ static const UTF16 *open_flag_to_besta(int flags) {
         return __READ_BINARY;
     default:
         return NULL;
-    }
-}
-
-static UTF16 *dir_to_fnmatch(UTF16 *path) {
-    size_t wlen = __nowide_bestawcslen(path);
-    if (wlen < 1) {
-        return NULL;
-    }
-    if (path[wlen - 1] == '\\') {
-        UTF16 *fnmatch = realloc(path, (wlen + 2) * sizeof(UTF16));
-        fnmatch[wlen] = _BUL('*');
-        return fnmatch;
-    } else {
-        UTF16 *fnmatch = realloc(path, (wlen + 3) * sizeof(UTF16));
-        fnmatch[wlen] = _BUL('\\');
-        fnmatch[wlen+1] = _BUL('*');
-        return fnmatch;
     }
 }
 
@@ -116,6 +102,33 @@ static int stat_from_find_ctx(struct stat *out, find_context_t *in) {
     return 0;
 }
 
+static find_context_t *__muteki_wfind_under_dir_r(struct _reent *r, const UTF16 *wname) {
+    // Process wname into a fnmatch pattern
+    UTF16 *fnmatch = __muteki_dir_to_fnmatch(wname);
+    if (fnmatch == NULL) {
+        _REENT_ERRNO(r) = EINVAL;
+        return NULL;
+    }
+
+    // Create a new find context and use it as the system directory handle
+    find_context_t *find_ctx = malloc(sizeof(find_context_t));
+    if (find_ctx == NULL) {
+        _REENT_ERRNO(r) = ENOMEM;
+        free(fnmatch);
+        return NULL;
+    }
+
+    if (_wfindfirst(fnmatch, find_ctx, 0) < 0) {
+        _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
+        free(fnmatch);
+        free(find_ctx);
+        return NULL;
+    }
+
+    free(fnmatch);
+    return find_ctx;
+}
+
 // _exit() is defined in program_lifecycle.c
 
 // close
@@ -148,7 +161,7 @@ int _fstat_r(struct _reent *r, int fd, struct stat *st) {
     find_context_t find_ctx;
     DescriptorTranslation *dt = __muteki_fd_grab(fd);
 
-    if (_wfindfirst(dt->filename, &find_ctx) < 0) {
+    if (_wfindfirst(dt->filename, &find_ctx, 0) < 0) {
         _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
         __muteki_fd_drop(dt);
         return -1;
@@ -237,6 +250,7 @@ _off_t _lseek_r(struct _reent *r, int fd, _off_t offset, int whence) {
 
     switch (dt->type) {
     case MUTEKI_DESCRIPTOR_DEVNULL: {
+        __muteki_fd_drop(dt);
         return 0;
     }
     case MUTEKI_DESCRIPTOR_FILE: {
@@ -304,33 +318,18 @@ int _open_r(struct _reent *r, const char *name, int flags, int mode) {
     }
 
     if (is_dir) {
-        // Process wname into a fnmatch pattern
-        if (flags & O_DIRECTORY) {
+        if (!(flags & O_DIRECTORY)) {
             _REENT_ERRNO(r) = EISDIR;
             free(wname);
             return -1;
         }
 
-        UTF16 *fnmatch = dir_to_fnmatch(wname);
+        sys_fd = __muteki_wfind_under_dir_r(r, wname);
 
-        if (fnmatch == NULL) {
-            _REENT_ERRNO(r) = EINVAL;
+        if (sys_fd == NULL) {
             free(wname);
             return -1;
         }
-
-        // Create a new find context and use it as the system directory handle
-        find_context_t *find_ctx = malloc(sizeof(find_context_t));
-        if (_wfindfirst(fnmatch, find_ctx) < 0) {
-            _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
-            free(wname);
-            free(fnmatch);
-            free(find_ctx);
-            return -1;
-        }
-
-        sys_fd = find_ctx;
-        free(fnmatch);
     } else {
         if (flags & O_DIRECTORY) {
             _REENT_ERRNO(r) = ENOTDIR;
@@ -420,7 +419,7 @@ int _stat_r(struct _reent *r, const char *name, struct stat *st) {
         return -1;
     }
 
-    if (_wfindfirst(wname, &find_ctx) < 0) {
+    if (_wfindfirst(wname, &find_ctx, 0) < 0) {
         free(wname);
         _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
         return -1;

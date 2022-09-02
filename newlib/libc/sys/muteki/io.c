@@ -168,6 +168,7 @@ int __muteki_fd_drop(DescriptorTranslation *map) {
             }
             case MUTEKI_DESCRIPTOR_DIRECTORY: {
                 ret = _findclose((find_context_t *) map->handle);
+                free(map->handle);
                 if (map->filename) {
                     free(map->filename);
                 }

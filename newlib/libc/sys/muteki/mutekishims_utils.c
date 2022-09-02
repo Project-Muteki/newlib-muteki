@@ -1,5 +1,10 @@
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <muteki/errno.h>
+
+#include "mutekishims_utils.h"
+#include "nowide.h"
 
 int __muteki_kerrno_to_errno(kerrno_t kerrno) {
     short err = KERRNO_ERR(kerrno);
@@ -50,5 +55,26 @@ int __muteki_kerrno_to_errno(kerrno_t kerrno) {
         break;
     default:
         return 0;
+    }
+}
+
+UTF16 *__muteki_dir_to_fnmatch(const UTF16 *path) {
+    size_t wlen = __nowide_bestawcslen(path);
+    if (wlen < 1) {
+        return NULL;
+    }
+    if (path[wlen - 1] == _BUL('\\')) {
+        UTF16 *fnmatch = malloc((wlen + 2) * sizeof(UTF16));
+        memcpy(fnmatch, path, wlen * sizeof(UTF16));
+        fnmatch[wlen] = _BUL('*');
+        fnmatch[wlen+1] = 0;
+        return fnmatch;
+    } else {
+        UTF16 *fnmatch = malloc((wlen + 3) * sizeof(UTF16));
+        memcpy(fnmatch, path, wlen * sizeof(UTF16));
+        fnmatch[wlen] = _BUL('\\');
+        fnmatch[wlen+1] = _BUL('*');
+        fnmatch[wlen+2] = 0;
+        return fnmatch;
     }
 }

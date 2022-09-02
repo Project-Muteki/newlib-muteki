@@ -9,5 +9,6 @@ void _init_muteki_io(void); // in io.c
 void _free_muteki_io(void); // in io.c
 
 int __muteki_kerrno_to_errno(kerrno_t kerrno);
+UTF16 *__muteki_dir_to_fnmatch(const UTF16 *path);
 
 #endif //__MUTEKI_LIBC_MUTEKISHIMS_UTILS_H__
