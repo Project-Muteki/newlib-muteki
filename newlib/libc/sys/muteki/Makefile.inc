@@ -16,6 +16,7 @@ libc_a_SOURCES += \
     %D%/readdir.c \
     %D%/readdir_r.c \
     %D%/rewinddir.c \
+    %D%/rmdir.c \
     %D%/scandir.c \
     %D%/seekdir.c \
     %D%/sleep.c \
