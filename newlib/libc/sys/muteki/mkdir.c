@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <reent.h>
+#include <sys/stat.h>
 
 #include <muteki/errno.h>
 #include <muteki/fs.h>
@@ -26,6 +27,6 @@ int _mkdir_r(struct _reent *r, const char *path, int mode) {
     return 0;
 }
 
-int mkdir(const char *path, int mode) {
+int mkdir(const char *path, mode_t mode) {
     return _mkdir_r(_REENT, path, mode);
 }

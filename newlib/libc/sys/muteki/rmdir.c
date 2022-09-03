@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <malloc.h>
 #include <reent.h>
+#include <unistd.h>
 
 #include <muteki/errno.h>
 #include <muteki/fs.h>
@@ -8,7 +9,7 @@
 #include "mutekishims_utils.h"
 #include "nowide.h"
 
-int _rmdir_r(struct _reent *r, const char *path, int mode) {
+int _rmdir_r(struct _reent *r, const char *path) {
     UTF16 *wpath = __nowide_prep_path_for_syscall_r(r, path);
     if (!wpath) {
         return -1;
@@ -25,6 +26,6 @@ int _rmdir_r(struct _reent *r, const char *path, int mode) {
     return 0;
 }
 
-int rmdir(const char *path, int mode) {
-    return _rmdir_r(_REENT, path, mode);
+int rmdir(const char *path) {
+    return _rmdir_r(_REENT, path);
 }
