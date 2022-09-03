@@ -32,11 +32,14 @@ DEALINGS IN THE SOFTWARE.
 #include <limits.h>
 #include <string.h>
 
+#include <muteki/errno.h>
 #include <muteki/fs.h>
 
 #include "bestadescriptor.h"
 #include "mutekishims_utils.h"
 #include "nowide.h"
+
+static const char FALLBACK_DEFAULT_CWD[] = "C:";
 
 static char __cwd[PATH_MAX] = {0};
 
@@ -53,9 +56,19 @@ static int __get_drive(const char *path) {
 }
 
 static void __init_cwd() {
+    __nowide_mbstate_t ctx = {0};
+    UTF16 sys_cwd[SYS_PATH_MAX_CU];
     if (strlen(__cwd) == 0) {
         // init cwd
-        strcpy(__cwd, "C:");
+        if (_wgetcurdir(NULL, sys_cwd) < 0) {
+            strcpy(__cwd, FALLBACK_DEFAULT_CWD);
+            return;
+        }
+        size_t wcs2mbs_ret = __nowide_bestawcstombs_r(_REENT, __cwd, sys_cwd, sizeof(__cwd), &ctx);
+        if (wcs2mbs_ret == (size_t) -1) {
+            strcpy(__cwd, FALLBACK_DEFAULT_CWD);
+            return;
+        }
     }
 }
 
@@ -297,7 +310,6 @@ int chdir(const char *path) {
     }
 
     short fat_attrib = _wfgetattr(wfullpath);
-    free(wfullpath);
     if (fat_attrib < 0) {
         free(fullpath);
         errno = __muteki_kerrno_to_errno(_GetLastError());
@@ -311,6 +323,8 @@ int chdir(const char *path) {
     }
 
     strcpy(__cwd, fullpath);
+    _wchdir(wfullpath);
+    free(wfullpath);
     free(fullpath);
     return 0;
 }
@@ -333,6 +347,7 @@ int fchdir(int fd) {
     case MUTEKI_DESCRIPTOR_DIRECTORY: {
         __nowide_mbstate_t ctx = {0};
         size_t ret = __nowide_bestawcstombs_r(_REENT, __cwd, fdmap->filename, sizeof(__cwd), &ctx);
+        _wchdir(fdmap->filename);
         __muteki_fd_drop(fdmap);
         if (ret == ((size_t) -1)) {
             return -1;

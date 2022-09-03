@@ -424,6 +424,7 @@ int _stat_r(struct _reent *r, const char *name, struct stat *st) {
         _REENT_ERRNO(r) = __muteki_kerrno_to_errno(_GetLastError());
         return -1;
     }
+    free(wname);
 
     int result = stat_from_find_ctx(st, &find_ctx);
     _findclose(&find_ctx);
