@@ -4,10 +4,12 @@ libc_a_SOURCES += \
     %D%/applet_startup.c \
     %D%/closedir.c \
     %D%/crt0.c \
+    %D%/cwd.c \
     %D%/dirfd.c \
     %D%/exit.c \
     %D%/io.c \
     %D%/malloc.c \
+    %D%/mkdir.c \
     %D%/mutekishims_utils.c \
     %D%/nowide.c \
     %D%/opendir.c \

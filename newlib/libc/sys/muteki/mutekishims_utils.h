@@ -5,10 +5,12 @@
 
 #include <muteki/errno.h>
 
-void _init_muteki_io(void); // in io.c
-void _free_muteki_io(void); // in io.c
+extern void _init_muteki_io(void); // in io.c
+extern void _free_muteki_io(void); // in io.c
 
-int __muteki_kerrno_to_errno(kerrno_t kerrno);
-UTF16 *__muteki_dir_to_fnmatch(const UTF16 *path);
+extern int __muteki_kerrno_to_errno(kerrno_t kerrno);
+extern UTF16 *__muteki_dir_to_fnmatch(const UTF16 *path);
+
+extern char *__realpath(const char *path);
 
 #endif //__MUTEKI_LIBC_MUTEKISHIMS_UTILS_H__

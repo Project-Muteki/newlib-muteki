@@ -1,3 +1,4 @@
+#include "mutekishims_utils.h"
 #include "nowide.h"
 #include <errno.h>
 #include <malloc.h>
@@ -337,9 +338,17 @@ size_t __nowide_bestawcstombs_r (struct _reent *r, char *__restrict s, const UTF
  * @param a Source string in UTF-8.
  * @return The converted string in UTF-16 or NULL if conversion fails. The user needs to free it after use.
  */
-UTF16 *__nowide_prep_path_for_syscall_r(struct _reent *r, const char *a) {
-    // TODO forward slashes to backward slashes
-    // TODO convert a into abspath
+UTF16 *__nowide_prep_path_for_syscall_r(struct _reent *r, const char *path) {
+    char *fullpath = __realpath(path);
+    if (fullpath == NULL) {
+        return NULL;
+    }
+    UTF16 *fullpathw = __nowide_mbstobestawcs_dup_r(r, fullpath);
+    free(fullpath);
+    return fullpathw;
+}
+
+UTF16 *__nowide_mbstobestawcs_dup_r(struct _reent *r, const char *a) {
     size_t alen = strlen(a);
     __nowide_mbstate_t ctx = {0};
 
@@ -351,7 +360,32 @@ UTF16 *__nowide_prep_path_for_syscall_r(struct _reent *r, const char *a) {
 
     UTF16 *w = result;
 
-    int actual = __nowide_mbstobestawcs_r(r, w, a, alen, &ctx);
+    int actual = __nowide_mbstobestawcs_r(r, w, a, alen + 1, &ctx);
+
+    if (actual < 0) {
+        free(result);
+        _REENT_ERRNO(r) = EILSEQ;
+        return NULL;
+    }
+
+    return result;
+}
+
+char *__nowide_bestawcstombs_dup_r(struct _reent *r, const UTF16 *w) {
+    size_t wlen = __nowide_bestawcslen(w);
+    __nowide_mbstate_t ctx = {0};
+
+    // 1 UTF16 CU fits in at most 3 UTF-8 CU
+    size_t buf_size = (wlen + 1) * 3;
+    char *result = (char *) calloc(buf_size, sizeof(char));
+    if (result == NULL) {
+        _REENT_ERRNO(r) = ENOMEM;
+        return NULL;
+    }
+
+    char *a = result;
+
+    int actual = __nowide_bestawcstombs_r(r, a, w, buf_size, &ctx);
 
     if (actual < 0) {
         free(result);
