@@ -6,7 +6,7 @@ libc_a_SOURCES += \
     %D%/crt0.c \
     %D%/cwd.c \
     %D%/dirfd.c \
-    %D%/exit.c \
+    %D%/_exit.c \
     %D%/io.c \
     %D%/malloc.c \
     %D%/mkdir.c \
