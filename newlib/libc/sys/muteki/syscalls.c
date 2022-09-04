@@ -24,9 +24,6 @@
 #include <muteki/file.h>
 #include <muteki/fs.h>
 
-//debug
-#include <mutekix/console.h>
-
 const UTF16 __READ_BINARY[] = _BUL("rb");
 const UTF16 __RW_BINARY[] = _BUL("rb+");
 const UTF16 __RW_BINARY_TRUNC[] = _BUL("wb+");
@@ -373,6 +370,7 @@ _ssize_t _read_r(struct _reent *r, int fd, void *buf, size_t len) {
     switch (dt->type) {
     case MUTEKI_DESCRIPTOR_DEVNULL: {
         memset(buf, 0, len);
+        __muteki_fd_drop(dt);
         return len;
     }
     case MUTEKI_DESCRIPTOR_FILE: {
@@ -488,6 +486,7 @@ _ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len) {
 
     switch (dt->type) {
     case MUTEKI_DESCRIPTOR_DEVNULL: {
+        __muteki_fd_drop(dt);
         return len;
     }
     case MUTEKI_DESCRIPTOR_FILE: {

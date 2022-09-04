@@ -59,7 +59,7 @@ struct dirent {
     unsigned char d_fatattrib; /* FAT attribute. Besta exclusive. */
     unsigned short d_reclen; /* Length of actual record. */
     unsigned short d_namlen; /* Length of entry name. */
-    char d_name[384]; /* Entry name (big enough to contain 255 UTF-16 codepoints in UTF-8) */
+    char d_name[768]; /* Entry name (big enough to contain 255 UTF-16 codepoints in UTF-8) */
 };
 
 struct DIR_;
