@@ -1,4 +1,6 @@
+#include <stdlib.h>
 #include <string.h>
+#include <sys/reent.h>
 #include "applet_lifecycle.h"
 #include "mutekishims_utils.h"
 
@@ -7,22 +9,40 @@ int __exit_value;
 jmp_buf __exit_jmp_buf;
 
 extern void __libc_init_array(void);
-extern void __libc_fini_array(void);
+
+static void zap_sglue(struct _glue *next) {
+    if (next == NULL) {
+        return;
+    }
+    if (next->_next != NULL) {
+        zap_sglue(next->_next);
+    } else {
+        free(next);
+    }
+}
+
+// Clean up __sglue because Besta RTOS won't do it for us
+static void goo_gone() {
+    zap_sglue(__sglue._next);
+}
+
+static void __attribute__((constructor(1))) on_init() {
+    _init_muteki_io();
+
+    // Register cleanup hooks to be run by exit()
+    // TODO since they need to be run all the time, should we use __attribute__((destructor(x))) for this?
+    atexit(&_free_muteki_io);
+    atexit(&goo_gone);
+}
 
 int _start_after_fix(int exec_proto_ver, applet_args_v4_t *app_ctx, uintptr_t _sbz) {
-    // Run initialization hooks
+    // Run all initialization hooks
     __libc_init_array();
-    _init_muteki_io();
 
     // Save the execution context for exit() and start the app.
     if (!setjmp(__exit_jmp_buf)) {
-        __exit_value = applet_startup(exec_proto_ver, app_ctx, _sbz);
+        exit(applet_startup(exec_proto_ver, app_ctx, _sbz));
     }
-
-    // Run cleanup hooks and return.
-    _free_muteki_io();
-    __libc_fini_array();
-
     return __exit_value;
 }
 
