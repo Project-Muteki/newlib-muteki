@@ -3,7 +3,6 @@ libc_a_SOURCES += \
     %D%/applet_reset.c \
     %D%/applet_startup.c \
     %D%/closedir.c \
-    %D%/crt0.c \
     %D%/cwd.c \
     %D%/dirfd.c \
     %D%/_exit.c \
