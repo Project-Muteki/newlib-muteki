@@ -14,6 +14,7 @@ libc_a_SOURCES += \
     %D%/opendir.c \
     %D%/readdir.c \
     %D%/readdir_r.c \
+    %D%/renamer.c \
     %D%/rewinddir.c \
     %D%/rmdir.c \
     %D%/scandir.c \
