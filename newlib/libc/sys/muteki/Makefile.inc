@@ -6,6 +6,7 @@ libc_a_SOURCES += \
     %D%/cwd.c \
     %D%/dirfd.c \
     %D%/_exit.c \
+    %D%/fstatvfs.c \
     %D%/io.c \
     %D%/malloc.c \
     %D%/mkdir.c \
@@ -20,5 +21,7 @@ libc_a_SOURCES += \
     %D%/scandir.c \
     %D%/seekdir.c \
     %D%/sleep.c \
+    %D%/statvfs.c \
+    %D%/statvfs_common.c \
     %D%/syscalls.c \
     %D%/telldir.c

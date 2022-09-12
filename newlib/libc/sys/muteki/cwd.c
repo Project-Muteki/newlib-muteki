@@ -44,7 +44,7 @@ static const char FALLBACK_DEFAULT_CWD[] = "C:";
 static char __cwd[PATH_MAX] = {0};
 
 // get end of drive position from full path
-static int __get_drive(const char *path) {
+int __get_drive(const char *path) {
     char first_char = toupper(path[0]);
     if (first_char >= 'A' && first_char <= 'Z' && path[1] == ':') {
         return 2;
@@ -183,24 +183,10 @@ char *__resolve_path(const char *path, char resolved[PATH_MAX]) {
 }
 
 // internal, without stat check. Used for mkdir/open/etc.
-// TODO forward slashes to backward slashes
-char *__realpath(const char *path) {
+static inline char *realpath_canonical(const char *path) {
     char resolved[PATH_MAX] = {0};
     char result[PATH_MAX] = {0};
     char *resolved_path = NULL;
-
-    // can't have null path
-    if (!path) {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    // empty path would resolve to cwd
-    // POSIX.1-2008 states that ENOENT should be returned if path points to empty string
-    if (strlen(path) == 0) {
-        errno = ENOENT;
-        return NULL;
-    }
 
     resolved_path = (char *) calloc(PATH_MAX, sizeof(char));
     if (!resolved_path) {
@@ -257,6 +243,36 @@ char *__realpath(const char *path) {
         free(resolved_path);
         return NULL;
     }
+}
+
+char *__realpath(const char *path) {
+    // can't have null path
+    if (!path) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    // empty path would resolve to cwd
+    // POSIX.1-2008 states that ENOENT should be returned if path points to empty string
+    if (strlen(path) == 0) {
+        errno = ENOENT;
+        return NULL;
+    }
+
+    // canonicalize path separator before passing to the actual routine
+    char *canonical_path = strdup(path);
+    if (canonical_path == NULL) {
+        errno = ENOMEM;
+        return NULL;
+    }
+    for (char *c=canonical_path; *c!='\0'; c++) {
+        if (*c == '/') {
+            *c = '\\';
+        }
+    }
+    char *rpath = realpath_canonical(canonical_path);
+    free(canonical_path);
+    return rpath;
 }
 
 char *realpath(const char *path, char *resolved_path) {

@@ -11,6 +11,7 @@ extern void _free_muteki_io(void); // in io.c
 extern int __muteki_kerrno_to_errno(kerrno_t kerrno);
 extern UTF16 *__muteki_dir_to_fnmatch(const UTF16 *path);
 
+extern int __get_drive(const char *path);
 extern char *__realpath(const char *path);
 
 #endif //__MUTEKI_LIBC_MUTEKISHIMS_UTILS_H__
