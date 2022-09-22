@@ -4,7 +4,6 @@
 #include "applet_lifecycle.h"
 #include "mutekishims_utils.h"
 
-int __stack_fixed = 0;
 int __exit_value;
 jmp_buf __exit_jmp_buf;
 
@@ -46,31 +45,31 @@ int _start_after_fix(int exec_proto_ver, applet_args_v4_t *app_ctx, uintptr_t _s
     return __exit_value;
 }
 
-/* Works around a Besta RTOS program loader bug that resulted in unaligned stack
- * pointer being handed over to the application */
+// Ensure 8-byte stack alignment for EABI compatibility.
+// Note: This actually has arguments and return value but they are not declared here to prevent potential issue with naked functions. See _start_after_fix for the declaration.
 __attribute__((naked))
-int _start(int exec_proto_ver, applet_args_v4_t *applet_args, uintptr_t _sbz) {
-    asm (
+void _start() {
+    // WARNING: Do NOT clobber r0-r2 here or bad thing could happen!
+    asm volatile (
         // Align to 8-bytes ourselves
-        "push {r4, r5, r6, lr}\n\t"
+        "push {r4, lr}\n\t"
         // Check for alignment
-        "bic r4, sp, #7\n\t"
-        "cmp r4, sp\n\t"
-        // Fix and set the flag if not aligned
-        "addne sp, sp, #-4\n\t"
-        "movne r4, #1\n\t"
-        "ldrne r5, =__stack_fixed\n\t"
-        "strne r4, [r5]\n\t"
+        "tst sp, #7\n\t"
+        // If not aligned, the dummy value flag itself will ensure the alignment, otherwise push a dummy value to maintain the alignment.
+        "mov r4, #0\n\t"
+        "subeq sp, sp, #4\n\t"
+        // Flag is set when dummy value is pushed.
+        "moveq r4, #1\n\t"
+        // Push the flag value
+        "stmfd sp!, {r4}\n\t"
         // Run the actual start routine
         "bl _start_after_fix\n\t"
-        // After finished, check for the fixed flag
-        "ldr r4, =__stack_fixed\n\t"
-        "ldr r4, [r4]\n\t"
-        "cmp r4, #1\n\t"
-        // If set, restore the original stack pointer
-        "addeq sp, sp, #4\n\t"
+        // After finished, pop the dummy value flag and check it
+        "ldmfd sp!, {r4}\n\t"
+        "cmp r4, #0\n\t"
+        // If set, pop the dummy value.
+        "addne sp, sp, #4\n\t"
         // Return
-        "pop {r4, r5, r6, lr}\n\t"
-        "bx lr"
+        "pop {r4, pc}"
     );
 }
