@@ -500,7 +500,6 @@ _ssize_t _write_r(struct _reent *r, int fd, const void *buf, size_t len) {
             }
             return 0;
         }
-        __fflush(dt->handle);
         __muteki_fd_drop(dt);
         return (_ssize_t) (actual & 0x7fffffff);
     }
