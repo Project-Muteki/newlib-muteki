@@ -646,7 +646,7 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
 	;;
   arm*-besta*eabi*)
     syscall_dir=syscalls
-    newlib_cflags="${newlib_cflags} -DMALLOC_PROVIDED -DHAVE_OPENDIR -DREENTRANT_SYSCALLS_PROVIDED"
+    newlib_cflags="${newlib_cflags} -DMALLOC_PROVIDED -DHAVE_OPENDIR -DREENTRANT_SYSCALLS_PROVIDED -DGETREENT_PROVIDED"
     # Thread isn't working yet.
     newlib_cflags="${newlib_cflags} -D__SINGLE_THREAD__"
 	;;

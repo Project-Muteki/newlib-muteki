@@ -3,6 +3,7 @@
 #include <sys/reent.h>
 #include "applet_lifecycle.h"
 #include "mutekishims_utils.h"
+#include "tls.h"
 
 int __exit_value;
 jmp_buf __exit_jmp_buf;
@@ -25,13 +26,20 @@ static void goo_gone() {
     zap_sglue(__sglue._next);
 }
 
+static void reent_cleanup() {
+    mutekix_tls_free_self(MUTEKIX_TLS_KEY_TLS);
+}
+
 static void __attribute__((constructor(1))) on_init() {
+    // needed for main thread reent
+    mutekix_tls_init_self();
     _init_muteki_io();
 
     // Register cleanup hooks to be run by exit()
     // TODO since they need to be run all the time, should we use __attribute__((destructor(x))) for this?
     atexit(&_free_muteki_io);
     atexit(&goo_gone);
+    atexit(&reent_cleanup);
 }
 
 int _start_after_fix(int exec_proto_ver, applet_args_v4_t *app_ctx, uintptr_t _sbz) {

@@ -82,7 +82,7 @@ void *_malloc_r(struct _reent *r, size_t size) {
     void *q = lmalloc(size + __OVER_ALLOC_SIZE);
 
     if (q == NULL) {
-        r->_errno = ENOMEM;
+        _REENT_ERRNO(r) = ENOMEM;
         return NULL;
     }
 
@@ -103,7 +103,7 @@ void *_calloc_r(struct _reent *r, size_t nmemb, size_t size) {
     void *p = _malloc_r(r, nmemb * size);
 
     if (p == NULL) {
-        r->_errno = ENOMEM;
+        _REENT_ERRNO(r) = ENOMEM;
         return NULL;
     }
 
@@ -127,7 +127,7 @@ void *_realloc_r(struct _reent *r, void *ptr, size_t size) {
 
     void *p = _malloc_r(r, size);
     if (p == NULL) {
-        r->_errno = ENOMEM;
+        _REENT_ERRNO(r) = ENOMEM;
         return NULL;
     }
 

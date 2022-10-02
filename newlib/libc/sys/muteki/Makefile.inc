@@ -25,4 +25,5 @@ libc_a_SOURCES += \
     %D%/statvfs.c \
     %D%/statvfs_common.c \
     %D%/syscalls.c \
-    %D%/telldir.c
+    %D%/telldir.c \
+    %D%/tls.c
