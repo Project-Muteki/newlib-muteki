@@ -14,6 +14,8 @@ extern "C" {
 #include <stddef.h>
 #include <sys/cdefs.h>
 #include <sys/_types.h>
+/* HACK: Manually pull in _Thread_local for libstdc++. Not sure why it doesn't just work. */
+#include <sys/cdefs.h>
 
 #define _NULL 0
 
