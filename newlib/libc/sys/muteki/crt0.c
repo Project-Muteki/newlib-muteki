@@ -4,8 +4,6 @@
 #include "applet_lifecycle.h"
 #include "mutekishims_utils.h"
 #include "tls.h"
-#include <muteki/threading.h>
-#include <muteki/utils.h>
 
 #ifdef _ENABLE_MUTEKI_LIBC_HEAP_TRACE
 #include <sys/heaptracer.h>
@@ -31,13 +29,11 @@ static void goo_gone() {
     zap_sglue(__sglue._next);
 }
 
-static void __attribute__((destructor(1))) on_fini() {
-    _free_muteki_io();
-    goo_gone();
-}
-
 static void __attribute__((constructor(1))) on_init() {
     _init_muteki_io();
+
+    atexit(&_free_muteki_io);
+    atexit(&goo_gone);
 }
 
 int _start_after_fix(int exec_proto_ver, applet_args_v4_t *app_ctx, uintptr_t _sbz) {
