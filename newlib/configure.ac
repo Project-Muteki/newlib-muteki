@@ -313,6 +313,17 @@ AC_ARG_ENABLE(newlib-use-gdtoa,
   esac
  fi], [newlib_use_gdtoa=yes])dnl
 
+dnl Support --enable-muteki-libc-heap-trace
+AC_ARG_ENABLE(muteki-libc-heap-trace,
+[  --enable-muteki-libc-heap-trace   Automatically trace libc and user program heap usage for muteki target.],
+[if test "${muteki_libc_heap_trace+set}" != set; then
+  case "${enableval}" in
+    yes) muteki_libc_heap_trace=yes;;
+    no)  muteki_libc_heap_trace=no ;;
+    *)   AC_MSG_ERROR(bad value ${enableval} for muteki-libc-heap-trace option) ;;
+  esac
+ fi], [muteki_libc_heap_trace=no])dnl
+
 AM_ENABLE_MULTILIB(, ..)
 NEWLIB_CONFIGURE(.)
 
@@ -456,6 +467,10 @@ fi
 
 if test "${newlib_reent_thread_local}" = "yes"; then
   AC_DEFINE(_WANT_REENT_THREAD_LOCAL, 1, [Define to enable thread-local storage objects as a replacment for struct _reent members.])
+fi
+
+if test "${muteki_libc_heap_trace}" = "yes"; then
+  AC_DEFINE(_ENABLE_MUTEKI_LIBC_HEAP_TRACE, 1, [Define to automatically trace libc and user program heap usage for muteki target.])
 fi
 
 _mb_len_max=1

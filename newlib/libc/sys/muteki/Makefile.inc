@@ -8,6 +8,7 @@ libc_a_SOURCES += \
     %D%/_exit.c \
     %D%/fstatvfs.c \
     %D%/fsync.c \
+    %D%/heaptracer.c \
     %D%/io.c \
     %D%/malloc.c \
     %D%/mkdir.c \

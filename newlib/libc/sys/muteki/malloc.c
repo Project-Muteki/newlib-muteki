@@ -28,6 +28,9 @@ typedef struct {
 
 static const size_t __OVER_ALLOC_SIZE = 4 + sizeof(__mchx_t);
 
+extern void _heaptracer_on_malloc(void *p, size_t size);
+extern void _heaptracer_on_free(void *p);
+
 /**
  * @brief A hack that fixes allocator alignment by adding an extra header to allocated memchunk.
  *
@@ -80,6 +83,8 @@ static inline void *__mchx_get_raw(void *p) {
  */
 void *_malloc_r(struct _reent *r, size_t size) {
     void *q = lmalloc(size + __OVER_ALLOC_SIZE);
+    
+    _heaptracer_on_malloc(q, size + __OVER_ALLOC_SIZE);
 
     if (q == NULL) {
         _REENT_ERRNO(r) = ENOMEM;
@@ -146,7 +151,11 @@ void _free_r(struct _reent *r, void *ptr) {
     if (ptr == NULL) {
         return;
     }
-    _lfree(__mchx_get_raw(ptr));
+
+    void *q = __mchx_get_raw(ptr);
+
+    _heaptracer_on_free(q);
+    _lfree(q);
 }
 
 /* Below are copied from newlib's reentrent to C standard functions. */
